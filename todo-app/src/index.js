@@ -2,6 +2,7 @@ import ReactDOM from 'react-dom'
 import React from 'react'
 import './index.css'
 
+// features:
 // (+) add task
 // (+) edit task
 // (+) delete task
@@ -15,22 +16,30 @@ class ToDoList extends React.Component {
             if(this.props.filterLvl === 1 && val[1]
                 || this.props.filterLvl === 2 && !val[1]) return <></>;
 
+            let cls = val[1] ? "completed" : "";
+
             return (
                 <li>
                     <input
+                        className={cls}
                         type="checkbox" 
                         checked={val[1]}
                         onChange={this.props.handleToggleCheck(inx)}
                     />
                     <input
-                        className={val[1]?"completed":""}
+                        className={cls}
                         type={inx==this.props.editTaskInx?"text":"button"}
                         value={val[0]} 
                         onClick={this.props.handleEditClick(inx)}
                         onChange={this.props.handleTaskChange(inx)}
                         onKeyUp={this.props.handleFinishEdit(inx)}
                     />
-                    <button onClick={this.props.handleDeleteTask(inx)}>X</button>
+                    <button
+                        className={cls}
+                        onClick={this.props.handleDeleteTask(inx)}
+                    >
+                        X
+                    </button>
                 </li>
             );
         });
@@ -59,10 +68,12 @@ class ToDoApp extends React.Component {
     }
 
     addTask = (event) => {
+        if(!this.state.newTask || (event.key && (event.key !== 'Enter'))) return;
         let tasks = this.state.tasks.slice();
         tasks.push([this.state.newTask, false]);
         this.setState({
             tasks: tasks,
+            newTask: '',
         });
     }
 
@@ -108,27 +119,33 @@ class ToDoApp extends React.Component {
         this.setState({filterLvl: lvl});
     }
 
+    makeFilterBold = (lvl, text) => {
+        return this.state.filterLvl===lvl ? <b>{text}</b> : text;
+    }
+
     render() {
         return (
             <div>
+                <h1>ToDo</h1>
                 <span>
                     <input 
                         type="text" 
                         value={this.state.newTask}
                         onChange={this.updNewTask}
+                        onKeyUp={this.addTask}
                     />
                     <button onClick={this.addTask}>Add</button>
                 </span>
                 <br/>
                 <span>
                     <button onClick={this.setFilter(0)}>
-                        All
+                        {this.makeFilterBold(0, "All")}
                     </button>
                     <button onClick={this.setFilter(1)}>
-                        In progress
+                        {this.makeFilterBold(1, "In progress")}
                     </button>
                     <button onClick={this.setFilter(2)}>
-                        Completed
+                        {this.makeFilterBold(2, "Completed")}
                     </button>
                 </span>
                 <ToDoList
