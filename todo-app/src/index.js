@@ -9,7 +9,38 @@ import './index.css'
 // (+) show only completed tasks
 // (+) show only active tasks
 
-class ToDo extends React.Component {
+class ToDoList extends React.Component {
+    render() {
+        let tasks_render = this.props.tasks.map((val, inx) => {
+            if(this.props.filterLvl === 1 && val[1]
+                || this.props.filterLvl === 2 && !val[1]) return <></>;
+
+            return (
+                <li>
+                    <input
+                        type="checkbox" 
+                        checked={val[1]}
+                        onChange={this.props.handleToggleCheck(inx)}
+                    />
+                    <input
+                        className={val[1]?"completed":""}
+                        type={inx==this.props.editTaskInx?"text":"button"}
+                        value={val[0]} 
+                        onClick={this.props.handleEditClick(inx)}
+                        onChange={this.props.handleTaskChange(inx)}
+                        onKeyUp={this.props.handleFinishEdit(inx)}
+                    />
+                    <button onClick={this.props.handleDeleteTask(inx)}>X</button>
+                </li>
+            );
+        });
+        return (
+            <ul>{tasks_render}</ul>
+        );
+    }
+}
+
+class ToDoApp extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -35,61 +66,49 @@ class ToDo extends React.Component {
         });
     }
 
-    removeTask = (event, inx) => {
+    handleToggleCheck = (inx) => (event) => {
         let tasks = this.state.tasks.slice();
-        tasks.splice(inx, 1);
+        tasks[inx] = [tasks[inx][0], !tasks[inx][1]];
         this.setState({
             tasks: tasks,
         })
     }
 
-    render() {
-        let tasks_rend = this.state.tasks.map((val, inx) => {
-            if(this.state.filterLvl === 1 && val[1]
-                || this.state.filterLvl === 2 && !val[1]) return <></>;
-
-            return (
-                <li>
-                    <input
-                        type="checkbox" 
-                        checked={val[1]}
-                        onChange={(event) => {
-                            let tasks = this.state.tasks.slice();
-                            tasks[inx] = [tasks[inx][0], !tasks[inx][1]];
-                            this.setState({
-                                tasks: tasks,
-                            })
-                        }}
-                    />
-                    <input
-                        className={this.state.tasks[inx][1]?"completed":""}
-                        type={inx==this.state.editTaskInx?"text":"button"}
-                        value={val[0]} 
-                        onClick={(event) => {
-                            this.setState({
-                                editTaskInx: inx,
-                            });
-                        }}
-                        onChange={(event) => {
-                                let tasks = this.state.tasks.slice();
-                                tasks[inx] = [event.target.value, tasks[inx][1]];
-                                this.setState({
-                                    tasks: tasks,
-                                })
-                            }
-                        }
-                        onKeyUp={(event) => {
-                            if (event.key === 'Enter') {
-                                this.setState({
-                                    editTaskInx: -1,
-                                });
-                            }
-                        }}
-                    />
-                    <button onClick={(event) => this.removeTask(event, inx)}>X</button>
-                </li>
-            );
+    handleEditClick = (inx) => (event) => {
+        this.setState({
+            editTaskInx: inx,
         });
+    }
+
+    handleTaskChange = (inx) => (event) => {
+        let tasks = this.state.tasks.slice();
+        tasks[inx] = [event.target.value, tasks[inx][1]];
+        this.setState({
+            tasks: tasks,
+        });
+    }
+
+    handleFinishEdit = (inx) => (event) => {
+        if (event.key === 'Enter') {
+            this.setState({
+                editTaskInx: -1,
+            });
+        }
+    }
+
+    handleDeleteTask = (inx) => (event) => {
+        let tasks = this.state.tasks.slice();
+        tasks.splice(inx, 1);
+        this.setState({
+            tasks: tasks,
+        });
+    }
+
+    setFilter = (lvl) => () => {
+        this.setState({filterLvl: lvl});
+    }
+
+    render() {
         return (
             <div>
                 <span>
@@ -102,33 +121,32 @@ class ToDo extends React.Component {
                 </span>
                 <br/>
                 <span>
-                    <button onClick={() => {
-                        this.setState({
-                            filterLvl: 0
-                        });
-                    }}>
+                    <button onClick={this.setFilter(0)}>
                         All
                     </button>
-                    <button onClick={() => {
-                        this.setState({
-                            filterLvl: 1
-                        });
-                    }}>In progress</button>
-                    <button onClick={() => {
-                        this.setState({
-                            filterLvl: 2
-                        });
-                    }}>Completed</button>
+                    <button onClick={this.setFilter(1)}>
+                        In progress
+                    </button>
+                    <button onClick={this.setFilter(2)}>
+                        Completed
+                    </button>
                 </span>
-                <ul>
-                    {tasks_rend}
-                </ul>
+                <ToDoList
+                    tasks={this.state.tasks}
+                    filterLvl={this.state.filterLvl}
+                    editTaskInx={this.state.editTaskInx}
+                    handleToggleCheck={this.handleToggleCheck}
+                    handleEditClick={this.handleEditClick}
+                    handleTaskChange={this.handleTaskChange}
+                    handleFinishEdit={this.handleFinishEdit}
+                    handleDeleteTask={this.handleDeleteTask}
+                />
             </div>
         );
     }
 }
 
 ReactDOM.render(
-    <ToDo />,
+    <ToDoApp />,
     document.getElementById('root')
 )
